@@ -99,8 +99,6 @@ TLevelWriterMp4::~TLevelWriterMp4() {
     postIArgs << "bt709";
 
     // Debug output to check the final command
-    qDebug() << "Final FFmpeg preIArgs:" << preIArgs;
-    qDebug() << "Final FFmpeg postIArgs:" << postIArgs;
 
     // Execute FFmpeg command with pre and post arguments
     ffmpegWriter->runFfmpeg(preIArgs, postIArgs, false, false, true);
