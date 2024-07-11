@@ -88,8 +88,14 @@ TLevelWriterMp4::~TLevelWriterMp4() {
   postIArgs << "yuv420p";
   postIArgs << "-s";
   postIArgs << QString::number(outLx) + "x" + QString::number(outLy);
-  postIArgs << "-b";
+  postIArgs << "-b:v";
   postIArgs << QString::number(finalBitrate) + "k";
+  postIArgs << "-color_primaries";
+  postIArgs << "bt709";
+  postIArgs << "-color_trc";
+  postIArgs << "bt709";
+  postIArgs << "-colorspace";
+  postIArgs << "bt709";
 
   ffmpegWriter->runFfmpeg(preIArgs, postIArgs, false, false, true);
   ffmpegWriter->cleanUpFiles();
