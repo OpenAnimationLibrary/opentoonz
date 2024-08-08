@@ -319,13 +319,14 @@ void ToonzScene::clear() {
 
 //-----------------------------------------------------------------------------
 
-void ToonzScene::setProject(TProject *project) {
+void ToonzScene::setProject(std::shared_ptr<TProject> project) {
   assert(project);
 
   if (project != m_project) {
     if (project) project->addRef();
     if (m_project) m_project->release();
     m_project = project;
+    if (!m_project) m_project = std::make_shared<TProject>();
   }
 }
 
@@ -1357,7 +1358,7 @@ TFilePath ToonzScene::codeFilePath(const TFilePath &path) const {
     return fp;
   }
 
-  if (project)
+if (project->isLoaded())
     for (int i = 0; i < project->getFolderCount(); i++) {
       TFilePath folderName("+" + project->getFolderName(i));
       TFilePath folderPath = decodeFilePath(folderName);
@@ -1392,7 +1393,7 @@ bool ToonzScene::codeFilePathWithSceneFolder(TFilePath &path) const {
 TFilePath ToonzScene::getDefaultLevelPath(int levelType,
                                           std::wstring levelName) const {
   TProject *project = getProject();
-  assert(project);
+  assert(project->isLoaded());
   TFilePath levelPath;
   switch (levelType) {
   case TZI_XSHLEVEL:
@@ -1479,7 +1480,7 @@ TFilePath ToonzScene::decodeSavePath(TFilePath path) const {
 
 bool ToonzScene::isExternPath(const TFilePath &fp) const {
   TProject *project = m_project;
-  assert(project);
+assert(project->isLoaded());
   for (int i = 0; i < project->getFolderCount(); i++) {
     if (project->getFolderName(i) == "scenes") continue;
 
