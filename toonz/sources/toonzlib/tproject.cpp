@@ -291,7 +291,8 @@ TProject::TProject()
     : m_name()
     , m_path()
     , m_sprop(new TSceneProperties())
-    , m_fpProp(new FilePathProperties()) {}
+    , m_fpProp(new FilePathProperties())
+    , m_isLoaded(false) {}
 
 //-------------------------------------------------------------------
 
@@ -695,6 +696,8 @@ void TProject::load(const TFilePath &projectPath) {
       is.matchEndTag();
     }
   }
+    setUseSubScenePath(useSubScenePath);
+    m_isLoaded = true;
 }
 
 //-------------------------------------------------------------------
@@ -994,8 +997,10 @@ TFilePath TProjectManager::getCurrentProjectPath() {
         If a current TProject() doesn't exist, load the project in the the
    current project path.
 */
-TProjectP TProjectManager::getCurrentProject() {
-  if (currentProject.getPointer() == 0) {
+std::shared_ptr<TProject> TProjectManager::getCurrentProject() {
+  if (!currentProject) currentProject = std::make_shared<TProject>();
+
+  if (!currentProject->isLoaded()) {
     TFilePath fp = getCurrentProjectPath();
     assert(TProject::isAProjectPath(fp));
     currentProject = new TProject();
