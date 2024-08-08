@@ -61,7 +61,7 @@ public:
     else {
       TProject *currentProject =
           TProjectManager::instance()->getCurrentProject().getPointer();
-      if (currentProject)
+      if (currentProject->isLoaded())
         folderPath =
             currentProject->decode(currentProject->getFolder(TProject::Inputs));
     }
