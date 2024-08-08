@@ -1026,7 +1026,7 @@ void DvDirTreeView::editCurrentVersionControlNode() {
 
     TProject *currentProject =
         TProjectManager::instance()->getCurrentProject().getPointer();
-    if (!currentProject) return;
+if (!currentProject->isLoaded()) return;
     TFilePath sceneFolder =
         currentProject->decode(currentProject->getFolder(TProject::Scenes));
     TFilePath scenesDescPath = sceneFolder + "scenes.xml";
@@ -1081,7 +1081,7 @@ void DvDirTreeView::unlockCurrentVersionControlNode() {
 
     TProject *currentProject =
         TProjectManager::instance()->getCurrentProject().getPointer();
-    if (!currentProject) return;
+if (!currentProject->isLoaded()) return;
     TFilePath sceneFolder =
         currentProject->decode(currentProject->getFolder(TProject::Scenes));
     TFilePath scenesDescPath = sceneFolder + "scenes.xml";
@@ -1134,7 +1134,7 @@ void DvDirTreeView::revertCurrentVersionControlNode() {
         TProjectManager::instance()->projectFolderToProjectPath(path);
     TProject *currentProject =
         TProjectManager::instance()->getCurrentProject().getPointer();
-    if (!currentProject) return;
+if (!currentProject->isLoaded()) return;
     TFilePath sceneFolder =
         currentProject->decode(currentProject->getFolder(TProject::Scenes));
     TFilePath scenesDescPath = sceneFolder + "scenes.xml";
