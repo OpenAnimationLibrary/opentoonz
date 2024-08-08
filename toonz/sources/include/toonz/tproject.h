@@ -30,6 +30,8 @@ class DVAPI TProject final : public TSmartObject {
 
   FilePathProperties *m_fpProp;
 
+bool m_isLoaded;
+
 public:
   // default folders names
   static const std::string Inputs;
@@ -89,6 +91,8 @@ public:
   void load(const TFilePath &projectPath);
 
   static bool isAProjectPath(const TFilePath &fp);
+
+  bool isLoaded() const { return m_isLoaded; }
 
 private:
   // not implemented
