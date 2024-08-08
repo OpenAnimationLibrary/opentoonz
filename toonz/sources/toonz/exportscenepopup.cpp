@@ -702,7 +702,7 @@ TFilePath ExportScenePopup::createNewProject() {
   TProject *project = new TProject();
 
   TProjectP currentProject = pm->getCurrentProject();
-  assert(currentProject);
+assert(currentProject->isLoaded());
   int i;
   for (i = 0; i < (int)currentProject->getFolderCount(); i++)
     project->setFolder(currentProject->getFolderName(i),
