@@ -3,9 +3,9 @@
 #ifndef TPROJECT_INCLUDED
 #define TPROJECT_INCLUDED
 #include <set>
+#include <memory>
 
 #include "tfilepath.h"
-#include "tsmartpointer.h"
 
 class ToonzScene;
 class TSceneProperties;
@@ -21,14 +21,17 @@ class FilePathProperties;
 #define DVVAR DV_IMPORT_VAR
 #endif
 
-class DVAPI TProject final : public TSmartObject {
+class DVAPI TProject final {
   TFilePath m_name, m_path;
   std::vector<std::string> m_folderNames;
   std::map<std::string, TFilePath> m_folders;
   std::map<std::string, bool> m_useScenePathFlags;
+  bool m_useSubScenePath;
   TSceneProperties *m_sprop;
 
   FilePathProperties *m_fpProp;
+
+  bool m_isLoaded;
 
 public:
   // default folders names
@@ -39,6 +42,7 @@ public:
   static const std::string Outputs;
   static const std::string Scripts;
   static const std::string Palettes;
+  static const std::string StopMotion;
 
   static const TFilePath SandboxProjectName;
 
@@ -78,6 +82,9 @@ public:
   //?????????????????????????????????????????????
   bool getUseScenePath(std::string folderName) const;
 
+  void setUseSubScenePath(bool on);
+  bool getUseSubScenePath() { return m_useSubScenePath; }
+
   // nei due metodi seguenti fp e' un path assoluto (possibilmente con
   // $scenepath)
   //????????????????????????????????????????????????
@@ -90,16 +97,14 @@ public:
 
   static bool isAProjectPath(const TFilePath &fp);
 
-private:
+  bool isLoaded() const { return m_isLoaded; }
+
+  private:
   // not implemented
   TProject(const TProject &src);
   TProject &operator=(const TProject &);
 };
 
-#ifdef _WIN32
-template class DVAPI TSmartPointerT<TProject>;
-#endif
-typedef TSmartPointerT<TProject> TProjectP;
 
 //===================================================================
 
@@ -113,11 +118,11 @@ public:
   };
 
 private:
-  std::vector<TFilePath> m_projectsRoots;
+  // std::vector<TFilePath> m_projectsRoots;
   std::vector<TFilePath> m_svnProjectsRoots;
   std::set<Listener *> m_listeners;
 
-  void addDefaultProjectsRoot();
+  // void addDefaultProjectsRoot();
 
   TProjectManager();
   void notifyListeners();
@@ -134,19 +139,19 @@ public:
 
   TFilePath getCurrentProjectPath();
   void setCurrentProjectPath(const TFilePath &fp);
-  TProjectP getCurrentProject();
+  std::shared_ptr<TProject> getCurrentProject();
 
   void initializeScene(ToonzScene *scene);
 
   void saveTemplate(ToonzScene *scene);
 
-  void clearProjectsRoot();
-  void addProjectsRoot(const TFilePath &fp);
+  // void clearProjectsRoot();
+  // void addProjectsRoot(const TFilePath &fp);
   void addSVNProjectsRoot(const TFilePath &fp);
 
   //! returns the project root of the current project (if this fails, then
   //! returns the first project root)
-  TFilePath getCurrentProjectRoot();
+  // TFilePath getCurrentProjectRoot();
 
   TFilePath projectPathToProjectName(const TFilePath &projectPath);
   TFilePath projectNameToProjectPath(const TFilePath &projectName);
@@ -154,13 +159,13 @@ public:
   TFilePath getProjectPathByName(const TFilePath &projectName);
   TFilePath getProjectPathByProjectFolder(const TFilePath &projectFolder);
 
-  TProjectP loadSceneProject(const TFilePath &scenePath);
+  std::shared_ptr<TProject> loadSceneProject(const TFilePath &scenePath);
   void getFolderNames(std::vector<std::string> &names);
 
   void addListener(Listener *listener);
   void removeListener(Listener *listener);
 
-  TProjectP createStandardProject();
+  std::shared_ptr<TProject> createStandardProject();
   void createSandboxIfNeeded();
 
   bool isTabKidsModeEnabled() const { return m_tabKidsMode; }
@@ -172,9 +177,9 @@ public:
   TFilePath getSandboxProjectFolder();
   TFilePath getSandboxProjectPath();
 
-  void getProjectRoots(std::vector<TFilePath> &projectRoots) const {
-    projectRoots = m_projectsRoots;
-  }
+  // void getProjectRoots(std::vector<TFilePath> &projectRoots) const {
+  //  projectRoots = m_projectsRoots;
+  //}
 
   bool isProject(const TFilePath &projectFolder);
 };
