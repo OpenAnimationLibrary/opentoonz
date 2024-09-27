@@ -57,42 +57,52 @@ TLevelWriterMp4::TLevelWriterMp4(const TFilePath &path, TPropertyGroup *winfo)
 //-----------------------------------------------------------
 
 TLevelWriterMp4::~TLevelWriterMp4() {
-  // QProcess createMp4;
-  QStringList preIArgs;
-  QStringList postIArgs;
+    QStringList preIArgs;
+    QStringList postIArgs;
 
-  int outLx = m_lx;
-  int outLy = m_ly;
+    int outLx = m_lx;
+    int outLy = m_ly;
 
-  // set scaling
-  if (m_scale != 0) {
-    outLx = m_lx * m_scale / 100;
-    outLy = m_ly * m_scale / 100;
-  }
-  // ffmpeg doesn't like resolutions that aren't divisible by 2.
-  if (outLx % 2 != 0) outLx++;
-  if (outLy % 2 != 0) outLy++;
+    // Set scaling
+    if (m_scale != 0) {
+        outLx = m_lx * m_scale / 100;
+        outLy = m_ly * m_scale / 100;
+    }
+    // Ensure resolutions are divisible by 2 (required by yuv420p)
+    if (outLx % 2 != 0) outLx++;
+    if (outLy % 2 != 0) outLy++;
 
-  // calculate quality (bitrate)
-  int pixelCount   = m_lx * m_ly;
-  int bitRate      = pixelCount / 150;  // crude but gets decent values
-  double quality   = m_vidQuality / 100.0;
-  double tempRate  = (double)bitRate * quality;
-  int finalBitrate = (int)tempRate;
-  int crf          = 51 - (m_vidQuality * 51 / 100);
+    // Calculate quality (bitrate)
+    int pixelCount = m_lx * m_ly;
+    int bitRate = pixelCount / 150;  // Crude but effective for decent values
+    double quality = m_vidQuality / 100.0;
+    double tempRate = (double)bitRate * quality;
+    int finalBitrate = (int)tempRate;
 
-  preIArgs << "-framerate";
-  preIArgs << QString::number(m_frameRate);
+    preIArgs << "-framerate";
+    preIArgs << QString::number(m_frameRate);
 
-  postIArgs << "-pix_fmt";
-  postIArgs << "yuv420p";
-  postIArgs << "-s";
-  postIArgs << QString::number(outLx) + "x" + QString::number(outLy);
-  postIArgs << "-b";
-  postIArgs << QString::number(finalBitrate) + "k";
+    postIArgs << "-pix_fmt";
+    postIArgs << "yuv420p";
+    postIArgs << "-b:v";
+    postIArgs << QString::number(finalBitrate) + "k";
 
-  ffmpegWriter->runFfmpeg(preIArgs, postIArgs, false, false, true);
-  ffmpegWriter->cleanUpFiles();
+    // Combine scaling and color space conversion into one filter argument
+    postIArgs << "-vf";
+    postIArgs << "scale=" + QString::number(outLx) + "x" + QString::number(outLy) + ",colorspace=all=bt709:iall=bt601-6-625:fast=1";
+
+    postIArgs << "-color_primaries";
+    postIArgs << "bt709";
+    postIArgs << "-color_trc";
+    postIArgs << "bt709";
+    postIArgs << "-colorspace";
+    postIArgs << "bt709";
+
+    // Debug output to check the final command
+
+    // Execute FFmpeg command with pre and post arguments
+    ffmpegWriter->runFfmpeg(preIArgs, postIArgs, false, false, true);
+    ffmpegWriter->cleanUpFiles();
 }
 
 //-----------------------------------------------------------
