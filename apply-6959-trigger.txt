@@ -1,1 +1,1 @@
-Trigger the pull-request-target workflow for OpenToonz issue 6959.
+Trigger the trusted Windows workflow to stage OpenToonz issue 6959.
