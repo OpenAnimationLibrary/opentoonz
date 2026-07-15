@@ -43,29 +43,34 @@ jobs:
           }
           '''
 
-          count = source.count(old)
-          if count != 1:
-              raise SystemExit(f"Expected exactly one save restore block, found {count}")
-
-          source = source.replace(old, new, 1)
-          path.write_text(source, encoding="utf-8")
+          old_count = source.count(old)
+          new_count = source.count(new)
+          if old_count == 1 and new_count == 0:
+              source = source.replace(old, new, 1)
+              path.write_text(source, encoding="utf-8")
+          elif old_count == 0 and new_count == 1:
+              pass
+          else:
+              raise SystemExit(
+                  f"Unexpected save block state: old={old_count}, new={new_count}"
+              )
           PY
 
       - name: Validate patch shape
         shell: bash
         run: |
           git diff --check
-          test "$(git diff --name-only | wc -l)" -eq 1
-          test "$(git diff --name-only)" = "toonz/sources/toonz/iocommand.cpp"
           grep -Fq 'cp->assign(&keepCP, false);' toonz/sources/toonz/iocommand.cpp
           ! sed -n '1490,1550p' toonz/sources/toonz/iocommand.cpp | grep -Fq 'getCurrentCleanupPalette()'
 
-      - name: Commit the fix and remove this one-shot workflow
+      - name: Commit the fix and remove one-shot files
         shell: bash
         run: |
-          rm .github/workflows/apply-6959-fix.yml
+          rm -f .github/workflows/apply-6959-fix.yml apply-6959-trigger.txt
           git config user.name "OpenAnimationLibrary automation"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add toonz/sources/toonz/iocommand.cpp .github/workflows/apply-6959-fix.yml
-          git commit -m "Fix cleanup palette switch after scene save"
-          git push origin HEAD:agent/fix-6959-cleanup-palette-save
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Fix cleanup palette switch after scene save"
+            git push origin HEAD:agent/fix-6959-cleanup-palette-save
+          fi
