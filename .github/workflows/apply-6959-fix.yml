@@ -1,0 +1,71 @@
+name: Apply OpenToonz issue 6959 fix
+
+on:
+  push:
+    branches:
+      - agent/fix-6959-cleanup-palette-save
+
+permissions:
+  contents: write
+
+jobs:
+  apply-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out staging branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/fix-6959-cleanup-palette-save
+          fetch-depth: 0
+
+      - name: Apply guarded source change
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("toonz/sources/toonz/iocommand.cpp")
+          source = path.read_text(encoding="utf-8")
+
+          old = '''  cp->assign(&keepCP);
+          // Make sure that the current cleanup palette is set to currentParams' palette
+          TApp::instance()
+              ->getPaletteController()
+              ->getCurrentCleanupPalette()
+              ->setPalette(cp->m_cleanupPalette.getPointer());
+          '''
+
+          new = '''  if (!isAutosave) {
+            // Restore the cleanup settings without replacing the palette object.
+            // Palette handles keep raw pointers to it, and resetting the cleanup handle
+            // here would also make the cleanup palette current.
+            cp->assign(&keepCP, false);
+          }
+          '''
+
+          count = source.count(old)
+          if count != 1:
+              raise SystemExit(f"Expected exactly one save restore block, found {count}")
+
+          source = source.replace(old, new, 1)
+          path.write_text(source, encoding="utf-8")
+          PY
+
+      - name: Validate patch shape
+        shell: bash
+        run: |
+          git diff --check
+          test "$(git diff --name-only | wc -l)" -eq 1
+          test "$(git diff --name-only)" = "toonz/sources/toonz/iocommand.cpp"
+          grep -Fq 'cp->assign(&keepCP, false);' toonz/sources/toonz/iocommand.cpp
+          ! sed -n '1490,1550p' toonz/sources/toonz/iocommand.cpp | grep -Fq 'getCurrentCleanupPalette()'
+
+      - name: Commit the fix and remove this one-shot workflow
+        shell: bash
+        run: |
+          rm .github/workflows/apply-6959-fix.yml
+          git config user.name "OpenAnimationLibrary automation"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add toonz/sources/toonz/iocommand.cpp .github/workflows/apply-6959-fix.yml
+          git commit -m "Fix cleanup palette switch after scene save"
+          git push origin HEAD:agent/fix-6959-cleanup-palette-save
